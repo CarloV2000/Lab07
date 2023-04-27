@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import it.polito.tdp.poweroutages.model.Model;
 import it.polito.tdp.poweroutages.model.Nerc;
+import it.polito.tdp.poweroutages.model.PowerOutage;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -38,7 +39,34 @@ public class FXMLController {
     
     @FXML
     void doRun(ActionEvent event) {
+    	String s = "";
     	txtResult.clear();
+    	Nerc n = this.cmbNerc.getValue();
+    	int maxYears = 0;
+    	int maxHours = 0;
+    	int contaPersoneColpite = 0;
+    	double contaOreDiDisservizio = 0.0;
+    	
+    	try {
+    		maxYears = Integer.parseInt(this.txtYears.getText());
+        }catch(IllegalArgumentException e) {
+        	this.txtResult.setText("Errore : inserire numero di anni");
+        	return;
+        }
+    	
+    	try {
+    		maxHours = Integer.parseInt(this.txtHours.getText());
+        }catch(IllegalArgumentException e) {
+        	this.txtResult.setText("Errore : inserire numero di ore");
+        	return;
+        }
+    	for(PowerOutage x : this.model.getWorstCase(n, maxYears, maxHours)) {
+    		s += x.toString(); 
+    		contaPersoneColpite += x.getCustomersAffected();
+    		contaOreDiDisservizio += x.getDurataInOre(); 
+    	}
+    	this.txtResult.setText("Sono state coinvolte " + contaPersoneColpite +" persone , per un totale di "+contaOreDiDisservizio + " ore di disservizio :"+'\n' + s);
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -47,12 +75,15 @@ public class FXMLController {
         assert txtYears != null : "fx:id=\"txtYears\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtHours != null : "fx:id=\"txtHours\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Scene.fxml'.";
-        
+       
         // Utilizzare questo font per incolonnare correttamente i dati;
         txtResult.setStyle("-fx-font-family: monospace");
     }
     
     public void setModel(Model model) {
     	this.model = model;
+    	for(Nerc n : model.getNercList()) {
+    		this.cmbNerc.getItems().add(n);
+        }
     }
 }
